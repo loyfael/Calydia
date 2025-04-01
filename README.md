@@ -119,12 +119,6 @@ src/
 
 ---
 
-## 📄 License
-
-MIT License – Free to use, fork, and modify.
-
----
-
 ## 🧙‍♂️ Maintained by
 
 Felke (Calydia Project)
