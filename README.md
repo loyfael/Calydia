@@ -3,6 +3,14 @@
 **Calydia** is a modular, plugin-ready Discord bot written in TypeScript.  
 It’s designed to be clean, extensible, and easy to deploy in production on a VPS.
 
+> [!WARNING]  
+> This project is licensed under the GNU General Public License v3.0 (GPLv3) with a Non-Commercial Clause.
+>
+> - You are not allowed to sell my code.
+> - In general, you may not use my code in any commercial activity.
+> - You must mention that I wrote the code in any redistribution.
+> - You may not say that you are the author of my code.
+
 ---
 
 ## ✨ Features
