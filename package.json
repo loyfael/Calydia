@@ -5,7 +5,8 @@
     "dotenv": "^16.4.7"
   },
   "scripts": {
-    "dev": "npx tsc && node dist/index.js"
+    "dev": "npx tsc && node dist/index.js",
+    "build": "npx tsc"
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
