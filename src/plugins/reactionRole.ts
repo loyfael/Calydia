@@ -1,0 +1,122 @@
+import { Client, TextChannel } from 'discord.js';
+import { config } from '../core/env.js';
+
+const REACTION_EMOJI = '✅';
+
+console.log('📦 Plugin reactionRole.ts chargé');
+
+export default function reactionRole(client: Client) {
+
+    client.once('ready', async () => {
+        console.log('⚙️ Le plugin reactionRole est en train de démarrer...');
+
+        let channel: TextChannel;
+        try {
+            const fetchedChannel = await client.channels.fetch(config.channelId);
+            if (!fetchedChannel || !(fetchedChannel instanceof TextChannel)) {
+                console.error('❌ Le salon est introuvable ou n\'est pas un TextChannel');
+                return;
+            }
+            channel = fetchedChannel;
+            console.log(`📺 Salon récupéré : #${channel.name}`);
+        } catch (error) {
+            console.error('❌ Erreur lors de la récupération du salon :', error);
+            return;
+        }
+
+        let targetMessage;
+        try {
+            targetMessage = await channel.messages.fetch(config.targetMessageId);
+            if (!targetMessage) {
+                console.error('❌ Le message cible n\'a pas été trouvé');
+                return;
+            }
+            console.log(`✉️ Message cible trouvé : ${targetMessage.id}`);
+        } catch (error) {
+            console.error('❌ Erreur lors de la récupération du message cible :', error);
+            return;
+        }
+
+        try {
+            await targetMessage.react(REACTION_EMOJI);
+            console.log(`✅ Réaction "${REACTION_EMOJI}" ajoutée au message ${targetMessage.id}`);
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'ajout de la réaction :', error);
+        }
+    });
+
+    client.on('messageReactionAdd', async (reaction, user) => {
+        console.log(`💡 Réaction détectée : ${reaction.emoji.name} par ${user.tag}`);
+
+        try {
+            if (reaction.partial) {
+                try {
+                    await reaction.fetch();
+                    console.log('🔄 Reaction partielle récupérée');
+                } catch (err) {
+                    console.error('❌ Impossible de fetch la réaction partielle :', err);
+                    return;
+                }
+            }
+
+            if (reaction.message.partial) {
+                try {
+                    await reaction.message.fetch();
+                    console.log('🔄 Message partiel récupéré');
+                } catch (err) {
+                    console.error('❌ Impossible de fetch le message partiel :', err);
+                    return;
+                }
+            }
+
+            if (
+                reaction.message.id === config.targetMessageId &&
+                reaction.emoji.name === REACTION_EMOJI &&
+                !user.bot
+            ) {
+                console.log('✅ Réaction correcte détectée');
+
+                try {
+                    const guild = await client.guilds.fetch(config.guildId);
+                    const member = await guild.members.fetch(user.id);
+                    if (!member.roles.cache.has(config.roleId)) {
+                        await member.roles.add(config.roleId);
+                        console.log(`🎁 Rôle ajouté à ${user.tag}`);
+                    } else {
+                        console.log(`ℹ️ ${user.tag} a déjà le rôle`);
+                    }
+                } catch (err) {
+                    console.error('❌ Erreur lors de l\'ajout du rôle :', err);
+                }
+            } else {
+                console.log('⚠️ Réaction ignorée (mauvais message ou emoji)');
+            }
+        } catch (err) {
+            console.error('❌ Erreur dans messageReactionAdd :', err);
+        }
+    });
+
+    client.on('messageReactionRemove', async (reaction, user) => {
+        console.log(`💡 Réaction retirée : ${reaction.emoji.name} par ${user.tag}`);
+
+        try {
+            if (reaction.partial) await reaction.fetch();
+            if (reaction.message.partial) await reaction.message.fetch();
+
+            if (
+                reaction.message.id === config.targetMessageId &&
+                reaction.emoji.name === REACTION_EMOJI &&
+                !user.bot
+            ) {
+                const guild = await client.guilds.fetch(config.guildId);
+                const member = await guild.members.fetch(user.id);
+                if (member.roles.cache.has(config.roleId)) {
+                    await member.roles.remove(config.roleId);
+                    console.log(`🗑️ Rôle retiré à ${user.tag}`);
+                }
+            }
+        } catch (err) {
+            console.error('❌ Erreur dans messageReactionRemove :', err);
+        }
+    });
+}
