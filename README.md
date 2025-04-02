@@ -116,9 +116,3 @@ src/
 - Node.js 20+
 - Discord bot with necessary intents enabled
 - Permissions: manage roles, read/send messages, add reactions
-
----
-
-## 🧙‍♂️ Maintained by
-
-Felke (Calydia Project)
