@@ -1,3 +1,10 @@
+// This project is licensed under the GNU General Public License v3.0 (GPLv3) with a Non-Commercial Clause.
+
+// You are not allowed to sell my code.
+// In general, you may not use my code in any commercial activity.
+// You must mention that I wrote the code in any redistribution.
+// You may not say that you are the author of my code.
+
 import { Client, REST, Routes, SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { config } from '../core/env.js';
 
@@ -37,10 +44,9 @@ export default function slashInfo(client: Client) {
 async function sendInfo(interaction: ChatInputCommandInteraction) {
     await interaction.reply({
         content: `
-Hello guys ! :
+Hello
 
-💬 Discord : https://discord.gg/your-invite
-🌐 Site Web : https://your-website
+Display your important links here.
         `,
         ephemeral: false // true si tu veux que seul l'utilisateur voie le message
     });
