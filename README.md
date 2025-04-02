@@ -49,6 +49,8 @@ GUILD_ID=your-discord-server-id
 CHANNEL_ID=channel-id-where-to-add-reaction
 ROLE_ID=role-id-to-assign
 TARGET_MESSAGE_ID=existing-message-id-to-watch
+LOG_CHANNEL_ID=your-log-channel-id
+MANAGER_ROLE_ID=your-manager-role-id
 ```
 
 ### 4. Build the bot
