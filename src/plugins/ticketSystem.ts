@@ -51,25 +51,26 @@ export default function ticketSystem(client: Client) {
             const channel = await client.channels.fetch(config.channelId) as TextChannel;
             if (!channel?.isTextBased()) return;
 
-            const selectMenu = new StringSelectMenuBuilder()
+            const selectMenu = new StringSelectMenuBuilder() // Create a select menu for ticket categories
                 .setCustomId('ticket-category')
-                .setPlaceholder('📂 Select a category')
+                .setPlaceholder('📂 Sélectionnez votre catégorie')
                 .addOptions([
-                    { label: '🛠 Support', value: 'support', description: 'Technical help or questions' },
-                    { label: '🚨 Moderation', value: 'moderation', description: 'Report a user or rule violation' },
-                    { label: '🤝 Partnership', value: 'partnership', description: 'Request a server partnership' }
+                    { label: '🛠️ SUPPORT', value: 'support', description: 'Pour les questions, bugs, demandes etc.' },
+                    { label: '🚨 MODÉRATION', value: 'moderation', description: 'Pour signaler un joueur / contester / réclamer etc.' },
+                    { label: '🤝 PARTENARIAT', value: 'partnership', description: 'Devenir forgeur/euse d\'art.' }
                 ]);
 
-            const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+            const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu); // Create a row for the select menu
 
-            const embed = new EmbedBuilder()
+            const embed = new EmbedBuilder() // Create an embed for the ticket system
                 .setTitle('🎫 Need help?')
                 .setDescription('Select the category below to open a private ticket thread.')
                 .setColor(0x5865f2);
 
             await channel.send({ embeds: [embed], components: [row] });
 
-            const rest = new REST({ version: '10' }).setToken(config.token);
+            const rest = new REST({ version: '10' }).setToken(config.token); // Initialize REST client for API calls
+
             await rest.put(Routes.applicationGuildCommands(client.user!.id, config.guildId), {
                 body: [
                     new SlashCommandBuilder().setName('claim').setDescription('Claim this ticket'),
@@ -107,6 +108,7 @@ export default function ticketSystem(client: Client) {
                         .setRequired(true)
                 );
 
+                // Add fields based on the selected category
                 switch (category) {
                     case 'support':
                         fields.push(
@@ -206,6 +208,7 @@ export default function ticketSystem(client: Client) {
                         break;
                 }
 
+                // Add all fields to the modal
                 modal.addComponents(
                     ...fields.map(f => new ActionRowBuilder<TextInputBuilder>().addComponents(f))
                 );
@@ -213,19 +216,24 @@ export default function ticketSystem(client: Client) {
                 return await interaction.showModal(modal);
             }
 
+            // Handle modal submission
             if (interaction.isModalSubmit() && interaction.customId.startsWith('ticket-modal-')) {
-                const category = interaction.customId.split('ticket-modal-')[1];
-                const userId = interaction.user.id;
-                const now = Date.now();
-                const last = cooldowns.get(userId) || 0;
-                if (now - last < 60000) {
-                    return interaction.reply({ content: '⏳ Please wait before opening another ticket.', flags: 64 });
-                }
-                cooldowns.set(userId, now);
+                const category = interaction.customId.split('ticket-modal-')[1]; // Extract category from custom ID
+                const userId = interaction.user.id; // Get user ID
+                const now = Date.now(); // Get current timestamp
+                const last = cooldowns.get(userId) || 0; // Get last ticket creation timestamp
 
-                const responses: { name: string, value: string }[] = [];
+                // Check if user is on cooldown
+                if (now - last < 60000) { 
+                    return interaction.reply({ content: '⏳ Veuillez patienter un moment..', flags: 64 });
+                }
+
+                cooldowns.set(userId, now); // Set cooldown for user
+
+                const responses: { name: string, value: string }[] = []; // Initialize responses array
                 responses.push({ name: 'Pseudo en jeu', value: interaction.fields.getTextInputValue('ticket-username') });
 
+                // Add responses based on the selected category
                 switch (category) {
                     case 'support':
                         responses.push(
@@ -253,6 +261,7 @@ export default function ticketSystem(client: Client) {
                         break;
                 }
 
+                // Check if the user already has an active ticket
                 const thread = await (interaction.channel as TextChannel).threads.create({
                     name: `🔴-${interaction.user.username}-${category}`,
                     type: ChannelType.PrivateThread,
@@ -261,9 +270,10 @@ export default function ticketSystem(client: Client) {
                     reason: `New ticket (${category})`
                 });
 
-                ticketCreators.set(thread.id, interaction.user.id);
-                await thread.members.add(interaction.user.id);
+                ticketCreators.set(thread.id, interaction.user.id); // Store ticket creator ID
+                await thread.members.add(interaction.user.id); // Add user to the thread
 
+                // Send a message to the thread with ticket details
                 const embed = new EmbedBuilder()
                     .setTitle(`🎟️ ${category.charAt(0).toUpperCase() + category.slice(1)} Ticket`)
                     .addFields(
@@ -274,35 +284,39 @@ export default function ticketSystem(client: Client) {
                     )
                     .setColor(0x2ecc71);
 
+                // Add a control row with buttons for claiming and closing the ticket
                 const controlRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
                     new ButtonBuilder().setCustomId('claim-ticket').setLabel('Claim').setStyle(ButtonStyle.Success),
                     new ButtonBuilder().setCustomId('close-ticket').setLabel('Close').setStyle(ButtonStyle.Danger)
                 );
 
-                await thread.send({ content: `<@${interaction.user.id}>`, embeds: [embed], components: [controlRow] });
+                await thread.send({ content: `<@${interaction.user.id}>`, embeds: [embed], components: [controlRow] }); // Send the embed and control row to the thread
 
-                return await interaction.reply({ content: `✅ Your ticket has been opened: ${thread}`, flags: 64 });
+                return await interaction.reply({ content: `✅ Your ticket has been opened: ${thread}`, flags: 64 }); // Reply to the user with ticket link
             }
 
+            // Handle button interactions for claiming and closing tickets
             if (interaction.isButton()) {
                 const channel = interaction.channel as GuildTextBasedChannel;
                 const threadId = channel.id;
 
+                // Check if the interaction is from a ticket thread
                 if (interaction.customId === 'claim-ticket') {
-                    const member = await interaction.guild?.members.fetch(interaction.user.id);
-                    const roleId = TICKET_MANAGER_ROLE?.toString?.() || TICKET_MANAGER_ROLE;
+                    const member = await interaction.guild?.members.fetch(interaction.user.id); // Fetch the member who triggered the interaction
+                    const roleId = TICKET_MANAGER_ROLE?.toString?.() || TICKET_MANAGER_ROLE; // Get the ticket manager role ID
                     if (!roleId || !member?.roles.cache.has(roleId)) {
-                        return interaction.reply({ content: '⛔ You don\'t have permission to claim this ticket.', flags: 64 });
+                        return interaction.reply({ content: '⛔ Vous n\'avez pas la permission.', flags: 64 });
                     }
                     if (activeClaims.has(threadId)) {
                         return interaction.reply({ content: `⚠️ Already claimed by <@${activeClaims.get(threadId)}>`, flags: 64 });
                     }
 
                     activeClaims.set(threadId, interaction.user.id);
-                    await interaction.reply(`🟢 Ticket claimed by <@${interaction.user.id}>`);
+                    await interaction.reply(`🟢 Le ticket est désormais géré par <@${interaction.user.id}>`);
                     await channel.setName(`🟢-${channel.name.replace(/^🔴-/, '')}`);
                 }
 
+                // Handle ticket closure
                 if (interaction.customId === 'close-ticket') {
                     const messages = await channel.messages.fetch({ limit: 100 });
                     messages.sweep(msg => msg.system);
@@ -311,17 +325,19 @@ export default function ticketSystem(client: Client) {
                     const creatorId = ticketCreators.get(threadId);
                     if (!creatorId) return;
 
-                    const creator = await client.users.fetch(creatorId);
-                    const creatorName = creator.username.replace(/[^a-zA-Z0-9-_]/g, '_');
-                    const timestamp = new Date().toISOString().split('T')[0];
-                    const filename = `ticket-${creatorName}-${timestamp}.txt`;
-                    const buffer = Buffer.from(transcriptText, 'utf-8');
-                    const file = new AttachmentBuilder(buffer, { name: filename });
+                    const creator = await client.users.fetch(creatorId); // Fetch the ticket creator
+                    const creatorName = creator.username.replace(/[^a-zA-Z0-9-_]/g, '_'); // Sanitize username for filename
+                    const timestamp = new Date().toISOString().split('T')[0]; // Get current date for filename
+                    const filename = `ticket-${creatorName}-${timestamp}.txt`; // Create filename for transcript
+                    const buffer = Buffer.from(transcriptText, 'utf-8'); // Create a buffer from the transcript text
+                    const file = new AttachmentBuilder(buffer, { name: filename }); // Create an attachment from the buffer
 
                     try {
-                        const fetchedChannel = await client.channels.fetch(TICKET_LOG_CHANNEL_ID);
-                        if (fetchedChannel && fetchedChannel.type === ChannelType.GuildText) {
-                            await (fetchedChannel as TextChannel).send({ content: `📥 Ticket transcript from ${channel.name}`, files: [file] });
+                        const fetchedChannel = await client.channels.fetch(TICKET_LOG_CHANNEL_ID); // Fetch the log channel
+
+                        // Check if the channel is a text channel and send the transcript
+                        if (fetchedChannel && fetchedChannel.type === ChannelType.GuildText) { 
+                            await (fetchedChannel as TextChannel).send({ content: `📥 Transcript du ticket: ${channel.name}`, files: [file] });
                         }
                     } catch (err) {
                         console.error('❌ Failed to send transcript to log channel:', err);
@@ -334,7 +350,7 @@ export default function ticketSystem(client: Client) {
                         console.error('❌ Failed to send DM to ticket creator:', err);
                     }
 
-                    await interaction.reply({ content: '📁 Transcript saved. Ticket will be deleted in 5 seconds.', flags: 64 });
+                    await interaction.reply({ content: '📁 Transcript sauvegardé. Suppression du ticket dans 5 secondes.', flags: 64 });
                     setTimeout(() => channel.delete().catch(console.error), 5000);
                 }
             }
