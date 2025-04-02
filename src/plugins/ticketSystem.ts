@@ -345,7 +345,7 @@ export default function ticketSystem(client: Client) {
 
                     try {
                         const dm = await creator.createDM();
-                        await dm.send({ content: '📄 Here is the transcript of your closed ticket:', files: [file] });
+                        await dm.send({ content: '📄 Voici le transcript du ticket ayant été fermé:', files: [file] });
                     } catch (err) {
                         console.error('❌ Failed to send DM to ticket creator:', err);
                     }
