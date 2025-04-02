@@ -16,6 +16,7 @@ It’s designed to be clean, extensible, and easy to deploy in production on a V
 ## ✨ Features
 
 - ✅ Role assignment via emoji reaction
+- 🎟️ Ticket system based on discord threads
 - 🧩 Plugin system (just drop your plugin into `/src/plugins`)
 - 💬 Slash command `/info` to display useful server links
 - 🔁 Production-ready with PM2 support
