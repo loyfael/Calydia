@@ -1,8 +1,7 @@
-// src/plugins/presenceBadlands.ts
 import { Client, ActivityType } from 'discord.js';
 import { status } from 'minecraft-server-util';
 
-const SERVER_IP = 'play.myserver.fr';
+const SERVER_IP = 'ip.mcserver.com'; // Replace with your server's IP address
 const SERVER_PORT = 25565;
 const REFRESH_INTERVAL = 30_000;
 const INITIAL_DELAY = 5_000;
@@ -19,14 +18,13 @@ async function fetchPlayerCount(): Promise<number> {
 
 async function updatePresence(client: Client) {
     const count = await fetchPlayerCount();
-    const text = `${count} online 🟢`;
+    const text = `${count} connecté(e)s 🟢`;
 
     try {
         await client.user?.setPresence({
             activities: [{ name: text, type: ActivityType.Watching }],
             status: 'online'
         });
-        console.log(`✅ Presence updated: ${text}`);
     } catch (err) {
         console.error('❌ Failed to update presence:', err);
     }
