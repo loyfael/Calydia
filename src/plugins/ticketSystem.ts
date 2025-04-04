@@ -25,6 +25,7 @@ import {
     AttachmentBuilder,
     TextChannel,
     ThreadAutoArchiveDuration,
+    Message,
 } from 'discord.js';
 
 import { config } from '../core/env.js';
@@ -80,6 +81,28 @@ export default function ticketSystem(client: Client) {
             });
         } catch (err) {
             console.error('❌ Error during bot setup:', err);
+        }
+    });
+
+    client.on(Events.MessageCreate, async (message: Message) => {
+        if (message.author.bot) return;
+        if (message.channel.isThread() && message.channel.type === ChannelType.PrivateThread) {
+            const mentions = message.mentions.users.filter(u => u.id !== message.author.id);
+            if (mentions.size > 0) {
+                try {
+                    await message.delete();
+                    await message.channel.send({
+                        content: `<@${message.author.id}> ❌ Tu ne peux pas mentionner d'autres personnes dans un ticket.`,
+                        allowedMentions: { users: [message.author.id] }
+                    });
+
+                    for (const [userId] of mentions) {
+                        await message.channel.members.remove(userId).catch(() => { });
+                    }
+                } catch (err) {
+                    console.error("❌ Erreur en supprimant un message contenant des mentions ou en retirant un membre :", err);
+                }
+            }
         }
     });
 
