@@ -63,8 +63,25 @@ export default function ticketSystem(client: Client) {
             const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu); // Create a row for the select menu
 
             const embed = new EmbedBuilder() // Create an embed for the ticket system
-                .setTitle('🎫 Need help?')
-                .setDescription('Select the category below to open a private ticket thread.')
+                .setTitle('# 🎫 Ouvrir un ticket d’assistance')
+                .setDescription(`
+Bienvenue dans le centre d’assistance de Nuvalis !
+
+**Choisis la catégorie qui correspond le mieux à ta demande :**
+**🛠️ SUPPORT :** Pour toute question complexe, bug, souci technique etc.
+**🚨 MODÉRATION :** Pour signaler un joueur, contester une sanction, remboursement etc.
+**📢 PARTENARIAT :** Pour proposer une collaboration ou un projet avec Nuvalis (events compris).
+### 🕐 Disponibilités
+L’équipe est dispo du lundi au vendredi pour répondre à tes questions, suivre tes avancées et te filer un coup de main si besoin.
+📵 Les week-ends et jours fériés, les réponses peuvent être plus rares. Compte ça comme du bonus !
+### ⚠️ Rappel
+- Nous nous réservons le droit de supprimer le ticket et l'accès au support en cas d'abus.
+- Les questions simples doivent être posées dans le forum ⁠❓∵questions-entraide.
+- Ne demandez pas la permission de poser une question, posez-la directement.
+- Mentionner le staff est inutile, nous répondrons dés que nous serons disponibles.
+
+🙏 Merci de rester courtois et précis pour faciliter le traitement de ta demande.
+                `)
                 .setColor(0x5865f2);
 
             await channel.send({ embeds: [embed], components: [row] });
