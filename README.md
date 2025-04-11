@@ -23,6 +23,7 @@ It’s designed to be clean, extensible, and easy to deploy in production on a V
 - 🎟️ Ticket system based on discord threads
 - 💬 Slash command `/info` to display useful server links
 - 🧊 Minecraft Player Server Count
+- 😡 Contestation for send a contract between you and player for send client logs
 ---
 
 ## 🚀 Getting Started
