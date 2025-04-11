@@ -1,6 +1,6 @@
 # 🤖 Calydia – Modular Discord Bot
 
-**Calydia** is a modern, modular, plugin-ready Discord bot written in TypeScript.  
+**Calydia** is a open source modern, modular, plugin-ready Discord bot written in TypeScript.  
 It’s designed to be clean, extensible, and easy to deploy in production on a VPS.
 
 > [!WARNING]  
