@@ -25,6 +25,7 @@ import {
     AttachmentBuilder,
     TextChannel,
     ThreadAutoArchiveDuration,
+    Message,
 } from 'discord.js';
 
 import { config } from '../core/env.js';
@@ -97,6 +98,28 @@ L’équipe est dispo du lundi au vendredi pour répondre à tes questions, suiv
             });
         } catch (err) {
             console.error('❌ Error during bot setup:', err);
+        }
+    });
+
+    client.on(Events.MessageCreate, async (message: Message) => {
+        if (message.author.bot) return;
+        if (message.channel.isThread() && message.channel.type === ChannelType.PrivateThread) {
+            const mentions = message.mentions.users.filter(u => u.id !== message.author.id);
+            if (mentions.size > 0) {
+                try {
+                    await message.delete();
+                    await message.channel.send({
+                        content: `<@${message.author.id}> ❌ Tu ne peux pas mentionner d'autres personnes dans un ticket.`,
+                        allowedMentions: { users: [message.author.id] }
+                    });
+
+                    for (const [userId] of mentions) {
+                        await message.channel.members.remove(userId).catch(() => { });
+                    }
+                } catch (err) {
+                    console.error("❌ Erreur en supprimant un message contenant des mentions ou en retirant un membre :", err);
+                }
+            }
         }
     });
 
@@ -241,7 +264,7 @@ L’équipe est dispo du lundi au vendredi pour répondre à tes questions, suiv
                 const last = cooldowns.get(userId) || 0; // Get last ticket creation timestamp
 
                 // Check if user is on cooldown
-                if (now - last < 60000) { 
+                if (now - last < 60000) {
                     return interaction.reply({ content: '⏳ Veuillez patienter un moment..', flags: 64 });
                 }
 
@@ -289,6 +312,16 @@ L’équipe est dispo du lundi au vendredi pour répondre à tes questions, suiv
 
                 ticketCreators.set(thread.id, interaction.user.id); // Store ticket creator ID
                 await thread.members.add(interaction.user.id); // Add user to the thread
+
+                const staffRole = interaction.guild?.roles.cache.get(TICKET_MANAGER_ROLE);
+                if (staffRole) {
+                    const members = await interaction.guild?.members.fetch();
+                    members?.forEach(member => {
+                        if (member.roles.cache.has(TICKET_MANAGER_ROLE)) {
+                            thread.members.add(member.id).catch(() => { });
+                        }
+                    });
+                }
 
                 // Send a message to the thread with ticket details
                 const embed = new EmbedBuilder()
@@ -353,7 +386,7 @@ L’équipe est dispo du lundi au vendredi pour répondre à tes questions, suiv
                         const fetchedChannel = await client.channels.fetch(TICKET_LOG_CHANNEL_ID); // Fetch the log channel
 
                         // Check if the channel is a text channel and send the transcript
-                        if (fetchedChannel && fetchedChannel.type === ChannelType.GuildText) { 
+                        if (fetchedChannel && fetchedChannel.type === ChannelType.GuildText) {
                             await (fetchedChannel as TextChannel).send({ content: `📥 Transcript du ticket: ${channel.name}`, files: [file] });
                         }
                     } catch (err) {
