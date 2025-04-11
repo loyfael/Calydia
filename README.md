@@ -14,6 +14,7 @@ It’s designed to be clean, extensible, and easy to deploy in production on a V
 ---
 
 ## ✨ Features
+**How makes a plugin?** Take a look at this [template](https://github.com/loyfael/Calydia/blob/main/src/plugins/pluginExample.md)
 - 🧩 Plugin system (just drop your plugin into `/src/plugins`)
 - 🔁 Production-ready with PM2 support
 - 🧪 TypeScript-based, strict and typed
