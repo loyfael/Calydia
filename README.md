@@ -45,13 +45,14 @@ npm install
 Create a `.env` file at the root:
 
 ```env
-DISCORD_TOKEN=your-bot-token
-GUILD_ID=your-discord-server-id
-CHANNEL_ID=channel-id-where-to-add-reaction
-ROLE_ID=role-id-to-assign
-TARGET_MESSAGE_ID=existing-message-id-to-watch
-LOG_CHANNEL_ID=your-log-channel-id
-MANAGER_ROLE_ID=your-manager-role-id
+DISCORD_TOKEN=your-token # This is the bot token you get from the Discord Developer Portal.
+GUILD_ID=your-guild-id # This is the guild ID where the bot will operate.
+CHANNEL_ID=channel-where-message-is-sent # This is the channel where the message will be sent.
+ROLE_ID=role-to-assign # This is the role that will be assigned to the user when they react to the message.
+TARGET_MESSAGE_ID=le-message-id # This is the message ID of the message you want to react to.
+LOG_CHANNEL_ID=your-log-channel-id # This is the channel where logs will be sent.
+MANAGER_ROLE_ID=your-manager-role-id # This is the role that will be assigned to the user when they react to the message.
+CONTEST_ALLOWED_ROLE_ID=your-contest-allowed-role-id # This is the role that will be assigned to the user who can execute the command.
 ```
 
 ### 4. Build the bot
