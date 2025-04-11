@@ -10,7 +10,6 @@ import {
   ButtonStyle,
   Events,
   InteractionType,
-  EmbedBuilder,
   GuildMember,
   TextChannel
 } from 'discord.js';
@@ -21,7 +20,7 @@ export default function contestLogReview(client: Client) {
   client.once('ready', async () => {
     const data = new SlashCommandBuilder()
       .setName('contest')
-      .setDescription('Contest a sanction with log verification');
+      .setDescription('Contester une sanction avec une vérification des logs');
 
     const guilds = await client.guilds.fetch();
     for (const [_, guildRef] of guilds) {
@@ -35,7 +34,7 @@ export default function contestLogReview(client: Client) {
       const member = interaction.member as GuildMember;
       if (!member.roles.cache.has(ALLOWED_ROLE_ID)) {
         await interaction.reply({
-          content: '🚫 You don\t have the authorization.',
+          content: '🚫 Vous n\'avez pas la permission d\exécuter cette commande.',
           ephemeral: true
         });
         return;
@@ -46,16 +45,14 @@ export default function contestLogReview(client: Client) {
         .setLabel('ACCEPTER')
         .setStyle(ButtonStyle.Success);
 
-      const embed = new EmbedBuilder()
-        .setDescription(`
-Your message here. Put it like you want but don't forget to put the confirmation
-message inside the embed.
-`
-        )
-        .setColor(0x2ecc71);
-
       await interaction.reply({
-        embeds: [embed],
+        content:
+`
+Put your message here
+\`\`\`
+I confirm blablabla
+\`\`\`
+`,
         components: [new ActionRowBuilder<ButtonBuilder>().addComponents(button)],
         ephemeral: false
       });
@@ -86,47 +83,45 @@ message inside the embed.
         .replace(/\s+/g, ' ')
         .toLowerCase();
 
-      const expected = 'Enter your confirmation message here'
-        .normalize('NFD')
-        .replace(/\p{Diacritic}/gu, '')
-        .trim()
-        .replace(/\s+/g, ' ')
-        .toLowerCase();
-
-      if (userResponse !== expected) {
-        await interaction.reply({
-          content: '❌ The message don\'t correspond at the model.',
-          ephemeral: true
-        });
-        return;
-      }
+        const keywords = ['authorize', 'staff', 'moderation', 'serverName', 'logs', 'confidentiality'];
+        const matchCount = keywords.filter(word => userResponse.includes(word)).length;
+        
+        if (matchCount < keywords.length) {
+          await interaction.reply({
+            content: '❌ Your message does not contain all the essential elements. Please copy-paste it correctly or rephrase it with the important keywords.',
+            ephemeral: true
+          });
+          return;
+        }
 
       const now = new Date();
-      const logEmbed = new EmbedBuilder()
-        .setTitle('📋 New sanction context')
-        .addFields(
-          { name: 'User', value: `${interaction.user.tag} (<@${interaction.user.id}>)` },
-          { name: 'User ID', value: interaction.user.id },
-          { name: 'Date', value: now.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'medium' }) },
-          { name: 'Confirmation message', value: interaction.fields.getTextInputValue('confirmation_text').trim() }
-        )
-        .setColor(0x3498db)
-        .setTimestamp(now);
 
       await interaction.reply({
-        content: '✅ Confirmation saved..',
+        content: '✅ Confirmation saved.',
         ephemeral: true
       });
 
       if (interaction.channel && 'send' in interaction.channel && typeof interaction.channel.send === 'function') {
-        await interaction.channel.send({ embeds: [logEmbed] });
+        await interaction.channel.send(
+          `📋 New contestation\n` +
+          `👤 User : ${interaction.user.tag} (<@${interaction.user.id}>)\n` +
+          `🆔 ID: ${interaction.user.id}\n` +
+          `📅 Date : ${now.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'medium' })}\n` +
+          `✉️ Confirm message : ${interaction.fields.getTextInputValue('confirmation_text').trim()}`
+        );
       }
 
       const modChannelId = process.env.CONTEST_LOG_CHANNEL_ID;
       if (modChannelId) {
         const modChannel = await client.channels.fetch(modChannelId);
         if (modChannel && modChannel.isTextBased && modChannel.isTextBased()) {
-          (modChannel as TextChannel).send({ embeds: [logEmbed] });
+          (modChannel as TextChannel).send(
+            `📋 Nouvelle contestation de sanction\n` +
+            `👤 Utilisateur : ${interaction.user.tag} (<@${interaction.user.id}>)\n` +
+            `🆔 ID utilisateur : ${interaction.user.id}\n` +
+            `📅 Date : ${now.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'medium' })}\n` +
+            `✉️ Message confirmé : ${interaction.fields.getTextInputValue('confirmation_text').trim()}`
+          );
         }
       }
     }
