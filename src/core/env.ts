@@ -16,4 +16,5 @@ export const config = {
     targetMessageId: process.env.TARGET_MESSAGE_ID!,
     managerRoleId: process.env.MANAGER_ROLE_ID!,
     logChannelId: process.env.LOG_CHANNEL_ID!,
+    ticketCategoryId: process.env.TICKET_CATEGORY_ID!,
 };
