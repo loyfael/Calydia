@@ -20,7 +20,7 @@ It’s designed to be clean, extensible, and easy to deploy in production on a V
 - 🧪 TypeScript-based, strict and typed
 ## 🧩 Actual plugins 
 - ✅ Role assignment via emoji reaction
-- 🎟️ Ticket system based on discord threads
+- 🎟️ Modern ticket system
 - 💬 Slash command `/info` to display useful server links
 - 🧊 Minecraft Player Server Count
 - 😡 Contestation for send a contract between you and player for send client logs
