@@ -1,40 +1,53 @@
-import { Client, ActivityType } from 'discord.js';
+import { Client, ActivityType, VoiceChannel } from 'discord.js';
 import { status } from 'minecraft-server-util';
 
-const SERVER_IP = 'ip.mcserver.com'; // Replace with your server's IP address
+const SERVER_IP = '-nuvalis.mine.fun'; // Remplace par l'IP de ton serveur
 const SERVER_PORT = 25565;
-const REFRESH_INTERVAL = 30_000;
-const INITIAL_DELAY = 5_000;
+const PRESENCE_INTERVAL = 60_000;
+const VOICE_CHANNEL_ID = '1364484594635640883';
 
 async function fetchPlayerCount(): Promise<number> {
     try {
         const response = await status(SERVER_IP, SERVER_PORT);
         return response.players.online;
     } catch (err) {
-        console.error('❌ Failed to fetch player count:', err);
+        console.error('❌ Impossible de récupérer le nombre de joueurs:', err);
         return 0;
     }
 }
 
-async function updatePresence(client: Client) {
+async function updateStatusAndChannel(client: Client) {
     const count = await fetchPlayerCount();
     const text = `${count} connecté(e)s 🟢`;
 
+    // Mise à jour du statut Discord
     try {
         await client.user?.setPresence({
-            activities: [{ name: text, type: ActivityType.Watching }],
+            activities: [{ name: "play.nuvalis.fr", type: ActivityType.Watching }],
             status: 'online'
         });
     } catch (err) {
-        console.error('❌ Failed to update presence:', err);
+        console.error('❌ Erreur lors de la mise à jour du statut Discord:', err);
+    }
+
+    // Mise à jour du nom du salon vocal
+    try {
+        const channel = await client.channels.fetch(VOICE_CHANNEL_ID);
+        if (channel?.isVoiceBased()) {
+            await (channel as VoiceChannel).setName(text);
+        } else {
+            console.warn('⚠️ Le canal spécifié n’est pas un canal vocal ou est introuvable.');
+        }
+    } catch (err) {
+        console.error('❌ Erreur lors de la mise à jour du nom du canal vocal:', err);
     }
 }
 
 export default function minecraftServerPresences(client: Client) {
     client.once('ready', () => {
-        console.log(`⚙️ minecraftStatus plugin loaded for ${client.user?.tag}`);
+        console.log(`⚙️ Plugin MinecraftStatus chargé pour ${client.user?.tag}`);
 
-        setTimeout(() => updatePresence(client), INITIAL_DELAY);
-        setInterval(() => updatePresence(client), REFRESH_INTERVAL);
+        updateStatusAndChannel(client); // Exécution immédiate
+        setInterval(() => updateStatusAndChannel(client), PRESENCE_INTERVAL);
     });
 }
